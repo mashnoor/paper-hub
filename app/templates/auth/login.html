@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Login - PaperHub{% endblock %}
+
+{% block content %}
+<div class="auth-box">
+    <div class="auth-header">
+        <i class="fas fa-book fa-3x"></i>
+        <h1>PaperHub</h1>
+        <p>Your Research Paper Management Hub</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+        <h2>Login</h2>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required class="form-control" placeholder="your@email.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required class="form-control" placeholder="Your password">
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+        </div>
+    </form>
+</div>
+{% endblock %} 

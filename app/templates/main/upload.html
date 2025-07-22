@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Paper - PaperHub{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-header">
+        <h2><i class="fas fa-upload"></i> Upload Research Paper</h2>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <form method="POST" action="{{ url_for('main.upload') }}" enctype="multipart/form-data" class="upload-form">
+        <div class="upload-box" id="uploadBox">
+            <i class="fas fa-file-pdf fa-4x"></i>
+            <h3>Drag & Drop your PDF here</h3>
+            <p>or</p>
+            <label for="fileInput" class="btn btn-primary">
+                <i class="fas fa-folder-open"></i> Choose File
+            </label>
+            <input type="file" id="fileInput" name="file" accept=".pdf" required class="hidden" onchange="updateFileName(this)">
+            <p class="upload-hint">Maximum file size: 16MB</p>
+        </div>
+        
+        <div id="fileInfo" class="file-info hidden">
+            <i class="fas fa-file-pdf"></i>
+            <span id="fileName"></span>
+            <button type="button" onclick="clearFile()" class="btn-icon">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="form-group">
+            <label for="category">Category (Optional)</label>
+            <select name="category_id" id="category" class="form-control">
+                <option value="">No category</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="upload-actions">
+            <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
+                <i class="fas fa-cloud-upload-alt"></i> Upload Paper
+            </button>
+        </div>
+    </form>
+    
+    <div class="upload-info">
+        <h3>About Paper Processing</h3>
+        <ul>
+            <li><i class="fas fa-check-circle"></i> PDF files up to 16MB are supported</li>
+            <li><i class="fas fa-check-circle"></i> Paper title and abstract will be automatically extracted</li>
+            <li><i class="fas fa-check-circle"></i> You can organize papers into categories</li>
+            <li><i class="fas fa-check-circle"></i> Search functionality available after upload</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+// Drag and drop functionality
+const uploadBox = document.getElementById('uploadBox');
+const fileInput = document.getElementById('fileInput');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadBox.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+});
+
+['dragenter', 'dragover'].forEach(eventName => {
+    uploadBox.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    uploadBox.addEventListener(eventName, unhighlight, false);
+});
+
+uploadBox.addEventListener('drop', handleDrop, false);
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlight(e) {
+    uploadBox.classList.add('highlight');
+}
+
+function unhighlight(e) {
+    uploadBox.classList.remove('highlight');
+}
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    
+    if (files.length > 0 && files[0].type === 'application/pdf') {
+        fileInput.files = files;
+        updateFileName(fileInput);
+    } else {
+        alert('Please upload a PDF file');
+    }
+}
+
+function updateFileName(input) {
+    const fileName = input.files[0]?.name;
+    if (fileName) {
+        document.getElementById('fileName').textContent = fileName;
+        document.getElementById('fileInfo').classList.remove('hidden');
+        document.getElementById('uploadBox').classList.add('hidden');
+    }
+}
+
+function clearFile() {
+    fileInput.value = '';
+    document.getElementById('fileInfo').classList.add('hidden');
+    document.getElementById('uploadBox').classList.remove('hidden');
+}
+</script>
+{% endblock %} 
