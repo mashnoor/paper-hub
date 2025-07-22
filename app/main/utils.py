@@ -78,9 +78,9 @@ def extract_metadata_openrouter(text, api_key):
                         authors = ", ".join(authors)
 
                     return {
-                        "title": metadata.get('title', 'Untitled Paper')[:500],
+                        "title": metadata.get('title', 'Untitled Paper'),
                         "authors": authors,
-                        "abstract": metadata.get('abstract', '')[:1000],
+                        "abstract": metadata.get('abstract', ''),
                         "journal": metadata.get('journal', None)
                     }
             except json.JSONDecodeError:

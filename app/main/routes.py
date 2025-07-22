@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import render_template, redirect, url_for, flash, request, send_from_directory, current_app
+from flask import render_template, redirect, url_for, flash, request, send_from_directory, current_app, abort
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -100,6 +100,23 @@ def create_folder():
         db.session.add(folder)
         db.session.commit()
         flash('Folder created successfully!', 'success')
+    return redirect(url_for('main.dashboard'))
+
+@main_bp.route('/paper/<int:paper_id>/update', methods=['POST'])
+@login_required
+def update_paper(paper_id):
+    paper = Paper.query.get_or_404(paper_id)
+    if paper.user_id != current_user.id:
+        abort(403)
+    
+    folder_id = request.form.get('folder_id')
+    category_id = request.form.get('category_id')
+
+    paper.folder_id = int(folder_id) if folder_id else None
+    paper.category_id = int(category_id) if category_id else None
+    
+    db.session.commit()
+    flash('Paper updated successfully!', 'success')
     return redirect(url_for('main.dashboard'))
 
 
