@@ -5,97 +5,84 @@
 {% block content %}
 <div class="dashboard-container">
     <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fas fa-folder-tree"></i> Categories</h3>
-            <button class="btn-icon" onclick="toggleCategoryForm()">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
-        
-        <!-- Category creation form -->
-        <form id="categoryForm" class="category-form hidden" method="POST" action="{{ url_for('main.create_category') }}">
-            <input type="text" name="name" placeholder="Category name" required class="form-control form-control-sm">
-            <input type="color" name="color" value="#007bff" class="color-picker">
-            <button type="submit" class="btn btn-sm btn-primary">Add</button>
-            <button type="button" class="btn btn-sm" onclick="toggleCategoryForm()">Cancel</button>
-        </form>
-        
-        <!-- Category list -->
-        <div class="category-list">
-            <div class="category-item active" onclick="filterPapers('all')">
-                <i class="fas fa-book"></i>
-                <span>All Papers</span>
-                <span class="badge">{{ papers|length }}</span>
+    <div class="sidebar enhanced-sidebar">
+        <div class="sidebar-section">
+            <a href="{{ url_for('main.upload') }}" class="btn btn-block btn-primary" style="margin-bottom: 15px;">
+                <i class="fas fa-plus"></i> Add Papers
+            </a>
+            <div class="sidebar-group">
+                <div class="sidebar-title">
+                    <span>FOLDERS</span>
+                    <i class="fas fa-plus-circle sidebar-action-icon" onclick="showCreateForm('folder')"></i>
+                </div>
+                <form id="folderForm" class="create-form" method="POST" action="{{ url_for('main.create_folder') }}">
+                    <input type="text" name="name" placeholder="New folder name..." required>
+                    <button type="submit">Add</button>
+                </form>
+                {% for folder in folders %}
+                <div class="sidebar-folder">
+                    <i class="fas fa-folder"></i> {{ folder.name }} <span class="count">{{ folder.papers|length }}</span>
+                </div>
+                {% endfor %}
             </div>
-            
-            {% for category in categories %}
-            <div class="category-item" onclick="filterPapers('{{ category.id }}')" data-category-id="{{ category.id }}">
-                <span class="category-color" style="background-color: {{ category.color }}"></span>
-                <span>{{ category.name }}</span>
-                <span class="badge">{{ category.papers|length }}</span>
-            </div>
-            {% endfor %}
-            
-            <div class="category-item" onclick="filterPapers('uncategorized')">
-                <i class="fas fa-folder-open"></i>
-                <span>Uncategorized</span>
-                <span class="badge">{{ papers|selectattr('category_id', 'none')|list|length }}</span>
+            <div class="sidebar-group">
+                <div class="sidebar-title">
+                    <span>LABELS</span>
+                    <i class="fas fa-plus-circle sidebar-action-icon" onclick="showCreateForm('label')"></i>
+                </div>
+                <form id="labelForm" class="create-form" method="POST" action="{{ url_for('main.create_category') }}">
+                    <input type="text" name="name" placeholder="New label name..." required>
+                    <input type="color" name="color" value="#3498db">
+                    <button type="submit">Add</button>
+                </form>
+                {% for category in categories %}
+                <div class="sidebar-label">
+                    <span class="label-color" style="background:{{ category.color }}"></span>
+                    {{ category.name }}
+                    <span class="count">{{ category.papers|length }}</span>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-    
-    <!-- Main content -->
-    <div class="main-content">
-        <div class="content-header">
-            <h2>Your Papers</h2>
-            <div class="header-actions">
-                <input type="text" id="searchInput" placeholder="Search papers..." class="search-input" onkeyup="searchPapers()">
-                <a href="{{ url_for('main.upload') }}" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Upload Paper
-                </a>
-            </div>
+    <!-- Main Content -->
+    <div class="main-content enhanced-main-content">
+        <div class="content-header enhanced-content-header">
+            <input type="text" id="searchInput" placeholder="Search papers..." class="search-input enhanced-search-input" onkeyup="searchPapers()">
+            <span class="search-label">Search: <span id="searchTermDisplay"></span></span>
         </div>
-        
-        <div class="papers-grid" id="papersGrid">
+        <div class="papers-list enhanced-papers-list" id="papersList">
             {% for paper in papers %}
-            <div class="paper-card" data-category-id="{{ paper.category_id or 'none' }}" data-paper-id="{{ paper.id }}">
-                <div class="paper-header">
-                    {% if paper.category %}
-                    <span class="paper-category" style="background-color: {{ paper.category.color }}">
-                        {{ paper.category.name }}
-                    </span>
-                    {% endif %}
-                    <div class="paper-actions">
-                        <a href="{{ url_for('main.view_paper', paper_id=paper.id) }}" target="_blank" class="btn-icon" title="View PDF">
-                            <i class="fas fa-eye"></i>
+            <div class="paper-row enhanced-paper-row" data-title="{{ paper.title }}" data-authors="{{ paper.authors }}" data-abstract="{{ paper.abstract }}">
+                <div class="paper-info">
+                    <div class="paper-title-authors">
+                        <a href="{{ url_for('main.view_paper', paper_id=paper.id) }}" class="paper-title-link" target="_blank">
+                            <span class="highlightable">{{ paper.title }}</span>
                         </a>
-                        <form method="POST" action="{{ url_for('main.delete_paper', paper_id=paper.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this paper?');">
-                            <button type="submit" class="btn-icon danger" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                        <div class="paper-authors highlightable">
+                            {{ paper.authors }}
+                        </div>
+                        <div class="paper-abstract highlightable">
+                            {{ paper.abstract[:200] }}...
+                        </div>
+                    </div>
+                    <div class="paper-meta">
+                        <span class="paper-journal">{{ paper.journal or 'Journal Article' }}</span>
+                        <span class="paper-year">{{ paper.uploaded_at.year }}</span>
+                        {% if paper.category %}
+                        <span class="badge enhanced-badge" style="background:{{ paper.category.color }}">{{ paper.category.name }}</span>
+                        {% endif %}
                     </div>
                 </div>
-                
-                <h3 class="paper-title">{{ paper.title }}</h3>
-                
-                {% if paper.authors %}
-                <p class="paper-authors">
-                    <i class="fas fa-user"></i> {{ paper.authors }}
-                </p>
-                {% endif %}
-                
-                {% if paper.abstract %}
-                <div class="paper-abstract">
-                    {{ paper.abstract[:200] }}{% if paper.abstract|length > 200 %}...{% endif %}
-                </div>
-                {% endif %}
-                
-                <div class="paper-footer">
-                    <span class="paper-date">
-                        <i class="fas fa-calendar"></i> {{ paper.uploaded_at.strftime('%Y-%m-%d') }}
-                    </span>
+                <div class="paper-actions enhanced-paper-actions">
+                    <a href="{{ url_for('main.view_paper', paper_id=paper.id) }}" target="_blank" class="btn-icon" title="View PDF">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('main.delete_paper', paper_id=paper.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this paper?');">
+                        <button type="submit" class="btn-icon danger" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
             {% else %}
@@ -103,9 +90,6 @@
                 <i class="fas fa-file-pdf fa-3x"></i>
                 <h3>No papers yet</h3>
                 <p>Upload your first research paper to get started!</p>
-                <a href="{{ url_for('main.upload') }}" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Upload Paper
-                </a>
             </div>
             {% endfor %}
         </div>
@@ -113,54 +97,38 @@
 </div>
 
 <script>
-function toggleCategoryForm() {
-    const form = document.getElementById('categoryForm');
-    form.classList.toggle('hidden');
-}
-
-function filterPapers(categoryId) {
-    const papers = document.querySelectorAll('.paper-card');
-    const categoryItems = document.querySelectorAll('.category-item');
-    
-    // Update active state
-    categoryItems.forEach(item => {
-        item.classList.remove('active');
-        if ((categoryId === 'all' && !item.dataset.categoryId) ||
-            (categoryId === 'uncategorized' && item.textContent.includes('Uncategorized')) ||
-            (item.dataset.categoryId === categoryId)) {
-            item.classList.add('active');
-        }
-    });
-    
-    // Filter papers
-    papers.forEach(paper => {
-        const paperCategoryId = paper.dataset.categoryId;
-        
-        if (categoryId === 'all') {
-            paper.style.display = 'block';
-        } else if (categoryId === 'uncategorized') {
-            paper.style.display = paperCategoryId === 'none' ? 'block' : 'none';
-        } else {
-            paper.style.display = paperCategoryId === categoryId ? 'block' : 'none';
-        }
-    });
+function highlightTerm(element, term) {
+    if (!term) return;
+    const regex = new RegExp(`(${term})`, 'gi');
+    element.innerHTML = element.textContent.replace(regex, '<mark>$1</mark>');
 }
 
 function searchPapers() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const papers = document.querySelectorAll('.paper-card');
-    
-    papers.forEach(paper => {
-        const title = paper.querySelector('.paper-title').textContent.toLowerCase();
-        const authors = paper.querySelector('.paper-authors')?.textContent.toLowerCase() || '';
-        const abstract = paper.querySelector('.paper-abstract')?.textContent.toLowerCase() || '';
-        
-        if (title.includes(searchTerm) || authors.includes(searchTerm) || abstract.includes(searchTerm)) {
-            paper.style.display = 'block';
-        } else {
-            paper.style.display = 'none';
+    const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+    document.getElementById('searchTermDisplay').textContent = searchTerm;
+    const rows = document.querySelectorAll('.enhanced-paper-row');
+    rows.forEach(row => {
+        const title = row.dataset.title.toLowerCase();
+        const authors = row.dataset.authors.toLowerCase();
+        const abstract = row.dataset.abstract.toLowerCase();
+        let match = false;
+        if (searchTerm && (title.includes(searchTerm) || authors.includes(searchTerm) || abstract.includes(searchTerm))) {
+            match = true;
+        } else if (!searchTerm) {
+            match = true;
         }
+        row.style.display = match ? '' : 'none';
+        // Highlight
+        row.querySelectorAll('.highlightable').forEach(el => {
+            el.innerHTML = el.textContent; // Reset
+            if (searchTerm) highlightTerm(el, searchTerm);
+        });
     });
+}
+
+function showCreateForm(type) {
+    const form = document.getElementById(type + 'Form');
+    form.style.display = form.style.display === 'block' ? 'none' : 'block';
 }
 </script>
 {% endblock %} 

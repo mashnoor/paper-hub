@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from app.main import main_bp
-from app.models import db, Paper, Category
+from app.models import db, Paper, Category, Folder
 from app.main.utils import allowed_file, extract_text_from_pdf, extract_metadata_openrouter
 
 
@@ -21,7 +21,8 @@ def index():
 def dashboard():
     papers = Paper.query.filter_by(user_id=current_user.id).all()
     categories = Category.query.filter_by(user_id=current_user.id).all()
-    return render_template('main/dashboard.html', papers=papers, categories=categories)
+    folders = Folder.query.filter_by(user_id=current_user.id).all()
+    return render_template('main/dashboard.html', papers=papers, categories=categories, folders=folders)
 
 
 @main_bp.route('/upload', methods=['GET', 'POST'])
@@ -34,6 +35,7 @@ def upload():
         
         file = request.files['file']
         category_id = request.form.get('category_id')
+        folder_id = request.form.get('folder_id')
         
         if file.filename == '':
             flash('No file selected', 'error')
@@ -45,23 +47,22 @@ def upload():
             filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Extract text from PDF
             pdf_text = extract_text_from_pdf(filepath)
             
-            # Extract metadata
             metadata = extract_metadata_openrouter(
                 pdf_text, 
                 current_app.config.get('OPENROUTER_API_KEY')
             )
             
-            # Create paper record
             paper = Paper(
                 title=metadata['title'],
                 authors=metadata['authors'],
                 abstract=metadata['abstract'],
+                journal=metadata.get('journal'),
                 filename=filename,
                 user_id=current_user.id,
-                category_id=category_id if category_id else None
+                category_id=category_id if category_id else None,
+                folder_id=folder_id if folder_id else None
             )
             db.session.add(paper)
             db.session.commit()
@@ -72,7 +73,8 @@ def upload():
             flash('Invalid file type. Only PDF files are allowed.', 'error')
     
     categories = Category.query.filter_by(user_id=current_user.id).all()
-    return render_template('main/upload.html', categories=categories)
+    folders = Folder.query.filter_by(user_id=current_user.id).all()
+    return render_template('main/upload.html', categories=categories, folders=folders)
 
 
 @main_bp.route('/category/create', methods=['POST'])
@@ -87,6 +89,17 @@ def create_category():
         db.session.commit()
         flash('Category created successfully!', 'success')
     
+    return redirect(url_for('main.dashboard'))
+
+@main_bp.route('/folder/create', methods=['POST'])
+@login_required
+def create_folder():
+    name = request.form.get('name')
+    if name:
+        folder = Folder(name=name, user_id=current_user.id)
+        db.session.add(folder)
+        db.session.commit()
+        flash('Folder created successfully!', 'success')
     return redirect(url_for('main.dashboard'))
 
 

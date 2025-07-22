@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.auth import auth_bp
-from app.models import db, User
+from app.models import db, User, Folder, Category
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -47,6 +47,13 @@ def register():
             password=generate_password_hash(password)
         )
         db.session.add(user)
+        db.session.commit()
+
+        # Create default folder and category
+        default_folder = Folder(name="My Papers", user_id=user.id)
+        default_category = Category(name="General", user_id=user.id, color="#888888")
+        db.session.add(default_folder)
+        db.session.add(default_category)
         db.session.commit()
         
         flash('Registration successful! Please login.', 'success')

@@ -46,7 +46,7 @@ def extract_metadata_openrouter(text, api_key):
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are a helpful assistant that extracts metadata from academic papers. Return a JSON object with keys: title, authors, abstract."
+                        "content": "You are a helpful assistant that extracts metadata from academic papers. Return a JSON object with keys: title, authors, abstract, journal."
                     },
                     {
                         "role": "user",
@@ -80,7 +80,8 @@ def extract_metadata_openrouter(text, api_key):
                     return {
                         "title": metadata.get('title', 'Untitled Paper')[:500],
                         "authors": authors,
-                        "abstract": metadata.get('abstract', '')[:1000]
+                        "abstract": metadata.get('abstract', '')[:1000],
+                        "journal": metadata.get('journal', None)
                     }
             except json.JSONDecodeError:
                 pass
@@ -129,5 +130,6 @@ def extract_metadata_basic(text):
     return {
         "title": title[:500],
         "abstract": abstract[:1000],
-        "authors": authors[:500]
+        "authors": authors[:500],
+        "journal": None
     } 
