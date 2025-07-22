@@ -100,3 +100,4 @@ poetry.lock
 *.db
 *.sqlite3
 uploads/ 
+.env
